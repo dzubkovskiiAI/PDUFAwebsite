@@ -1,0 +1,203 @@
+window.PDUFA_DATA = {
+ "meta": {
+  "schema_version": 1,
+  "generated_at": "2026-10-19T00:00:00Z",
+  "count": 4,
+  "scope": [
+   {
+    "label": "Alzheimer's Disease",
+    "area": "neuro"
+   },
+   {
+    "label": "Arthritis",
+    "area": "imm"
+   },
+   {
+    "label": "Breast Cancer",
+    "area": "onc"
+   },
+   {
+    "label": "Colorectal Cancer",
+    "area": "onc"
+   },
+   {
+    "label": "Melanoma",
+    "area": "onc"
+   },
+   {
+    "label": "Non-Small Cell Lung Cancer",
+    "area": "onc"
+   },
+   {
+    "label": "Obesity",
+    "area": "obe"
+   },
+   {
+    "label": "Pancreatic Cancer",
+    "area": "onc"
+   },
+   {
+    "label": "Prostate Cancer",
+    "area": "onc"
+   }
+  ]
+ },
+ "events": [
+  {
+   "id": "nuvalent-zidesamtinib-nvl-520-896fe9",
+   "drug": "Zidesamtinib (NVL-520)",
+   "company": "Nuvalent",
+   "area": "onc",
+   "condition": "Non-Small Cell Lung Cancer",
+   "indication": "ROS1-positive NSCLC after at least one prior ROS1 TKI",
+   "date": "2026-09-18",
+   "status": "approved",
+   "decided": "2026-Q3",
+   "status_sources": [
+    {
+     "url": "https://www.aacr.org/blog/2026/10/05/fda-approvals-in-oncology-july-september-2026/",
+     "name": "AACR: FDA approvals in oncology, Q3 2026",
+     "type": "secondary",
+     "published": "2026-10-05",
+     "date": null,
+     "evidence": "AACR lists this approval during the third quarter of 2026."
+    }
+   ],
+   "review": "primary",
+   "sources": [
+    {
+     "url": "https://www.sec.gov/Archives/edgar/data/1861560/000119312526073304/nuvl-ex99_1.htm",
+     "name": "Nuvalent 8-K, Exhibit 99.1",
+     "type": "sec",
+     "published": null,
+     "date": "2026-09-18",
+     "evidence": "Company says FDA accepted the NDA and set a September 18, 2026 PDUFA date."
+    }
+   ],
+   "date_source_published": "",
+   "history": [
+    {
+     "ts": "2026-10-19T00:00:00Z",
+     "field": "created",
+     "new": "2026-09-18",
+     "source": "https://www.sec.gov/Archives/edgar/data/1861560/000119312526073304/nuvl-ex99_1.htm"
+    },
+    {
+     "ts": "2026-10-19T00:00:00Z",
+     "field": "status",
+     "old": "pending",
+     "new": "approved",
+     "source": "https://www.aacr.org/blog/2026/10/05/fda-approvals-in-oncology-july-september-2026/"
+    }
+   ],
+   "conflicts": [],
+   "first_seen": "2026-10-19T00:00:00Z",
+   "last_checked": "2026-10-19T00:00:00Z"
+  },
+  {
+   "id": "summit-therapeutics-ivonescimab-platinum-6f985b",
+   "drug": "Ivonescimab + platinum-doublet chemotherapy",
+   "company": "Summit Therapeutics",
+   "area": "onc",
+   "condition": "Non-Small Cell Lung Cancer",
+   "indication": "EGFR-mutated locally advanced or metastatic non-squamous NSCLC after a third-generation EGFR-TKI",
+   "date": "2026-11-14",
+   "status": "pending",
+   "decided": null,
+   "status_sources": [],
+   "review": "unverified",
+   "sources": [
+    {
+     "url": "https://www.zacks.com/stock/news/2826275/fda-accepts-smmt-s-application-seeking-approval-for-nsclc-drug",
+     "name": "Zacks (news report)",
+     "type": "secondary",
+     "published": null,
+     "date": "2026-11-14",
+     "evidence": "Report says FDA accepted the BLA with a November 14, 2026 target date."
+    }
+   ],
+   "date_source_published": "",
+   "history": [
+    {
+     "ts": "2026-10-19T00:00:00Z",
+     "field": "created",
+     "new": "2026-11-14",
+     "source": "https://www.zacks.com/stock/news/2826275/fda-accepts-smmt-s-application-seeking-approval-for-nsclc-drug"
+    }
+   ],
+   "conflicts": [],
+   "first_seen": "2026-10-19T00:00:00Z",
+   "last_checked": "2026-10-19T00:00:00Z"
+  },
+  {
+   "id": "gsk-jemperli-dostarlimab-d5d957",
+   "drug": "Jemperli (dostarlimab)",
+   "company": "GSK",
+   "area": "onc",
+   "condition": "Colorectal Cancer",
+   "indication": "Untreated stage II/III dMMR/MSI-H locally advanced rectal cancer",
+   "date": "2027-02",
+   "status": "pending",
+   "decided": null,
+   "status_sources": [],
+   "review": "primary",
+   "sources": [
+    {
+     "url": "https://www.sec.gov/Archives/edgar/data/0001370053/000119312526396690/anab-ex99_1.htm",
+     "name": "AnaptysBio 8-K, Exhibit 99.1 (royalty holder reporting GSK's filing)",
+     "type": "sec",
+     "published": "2026-09-21",
+     "date": "2027-02",
+     "evidence": "FDA set a February 2027 PDUFA date; a priority voucher could bring a decision sooner."
+    }
+   ],
+   "date_source_published": "2026-09-21",
+   "history": [
+    {
+     "ts": "2026-10-19T00:00:00Z",
+     "field": "created",
+     "new": "2027-02",
+     "source": "https://www.sec.gov/Archives/edgar/data/0001370053/000119312526396690/anab-ex99_1.htm"
+    }
+   ],
+   "conflicts": [],
+   "first_seen": "2026-10-19T00:00:00Z",
+   "last_checked": "2026-10-19T00:00:00Z"
+  },
+  {
+   "id": "taiho-oncology-cullinan-therapeutics-zip-a03bbd",
+   "drug": "Zipalertinib",
+   "company": "Taiho Oncology / Cullinan Therapeutics",
+   "area": "onc",
+   "condition": "Non-Small Cell Lung Cancer",
+   "indication": "EGFR exon 20 insertion NSCLC after platinum-based chemotherapy",
+   "date": "2027-02-27",
+   "status": "pending",
+   "decided": null,
+   "status_sources": [],
+   "review": "unverified",
+   "sources": [
+    {
+     "url": "https://stocktitan.net/news/CGEM/u-s-food-and-drug-administration-accepts-new-drug-application-for-o7dz8md64r08.html",
+     "name": "Stock Titan (reprint of company release)",
+     "type": "secondary",
+     "published": null,
+     "date": "2027-02-27",
+     "evidence": "Reprint says FDA accepted the NDA with a February 27, 2027 target date."
+    }
+   ],
+   "date_source_published": "",
+   "history": [
+    {
+     "ts": "2026-10-19T00:00:00Z",
+     "field": "created",
+     "new": "2027-02-27",
+     "source": "https://stocktitan.net/news/CGEM/u-s-food-and-drug-administration-accepts-new-drug-application-for-o7dz8md64r08.html"
+    }
+   ],
+   "conflicts": [],
+   "first_seen": "2026-10-19T00:00:00Z",
+   "last_checked": "2026-10-19T00:00:00Z"
+  }
+ ]
+};

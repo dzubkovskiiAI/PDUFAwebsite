@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PDUFA tracker</title>
+<meta name="description" content="FDA decision dates by therapeutic area and condition, with a source for every date.">
+<style>
+:root{
+  --paper:#F4F7F8; --panel:#FFFFFF; --ink:#12262E; --muted:#586B73; --line:#D3DCE0; --soft:#E8EEF0;
+  --serif:Charter,"Iowan Old Style","Palatino Linotype",Georgia,serif;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root{--paper:#0F1C21;--panel:#16272E;--ink:#E6EEF0;--muted:#9DB1B8;--line:#2A3E46;--soft:#1E323A}
+  .b-day{color:#7FD6A8!important;background:#12301F!important;border-color:#2F7A52!important}
+  .b-month{color:#F0CF7A!important;background:#33290C!important;border-color:#8A6C1C!important}
+  .b-quarter{color:#C9BDE6!important;background:#2A2340!important;border-color:#6A5B91!important}
+  .b-crl{color:#F2A3A3!important;background:#3A1616!important;border-color:#8A3A3A!important}
+  .row.flash{background:#4A3F12!important}
+  .mast{background:#0A1418!important}
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5}
+a{color:inherit}
+button{font:inherit;color:inherit}
+:focus-visible{outline:3px solid #3B8BEB;outline-offset:2px;border-radius:3px}
+.wrap{max-width:1240px;margin:0 auto;padding:0 20px}
+
+.mast{background:#12262E;color:#EAF1F3;padding:26px 0 24px}
+.mast .site{font-size:13px;color:#9DB4BC;margin:0 0 12px}
+.mast h1{font-family:var(--serif);font-weight:600;font-size:clamp(25px,4vw,38px);line-height:1.18;margin:0;max-width:24em}
+.mast .sub{margin:10px 0 0;color:#B9CBD1;max-width:46em}
+.mast .stats{display:flex;flex-wrap:wrap;gap:6px 22px;margin:16px 0 0;font-size:13px;color:#9DB4BC}
+.mast .stats b{color:#EAF1F3;font-weight:600}
+
+.controls{position:sticky;top:0;z-index:6;background:var(--paper);border-bottom:1px solid var(--line)}
+.controls .wrap{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;padding-top:10px;padding-bottom:10px}
+.seg{display:flex;gap:2px;background:var(--soft);padding:3px;border-radius:8px}
+.seg button{border:0;background:transparent;font-weight:600;padding:5px 13px;border-radius:6px;cursor:pointer;color:var(--muted)}
+.seg button[aria-selected="true"],.seg button[aria-pressed="true"]{background:var(--panel);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.2)}
+.spacer{flex:1}
+.field{display:flex;align-items:center;gap:6px;font-size:14px;color:var(--muted)}
+.btn{font-size:14px;font-weight:600;border:1.5px solid var(--ink);background:transparent;color:var(--ink);padding:6px 13px;border-radius:8px;cursor:pointer;text-decoration:none;display:inline-block}
+#fbtn{display:none}
+
+.layout{display:grid;grid-template-columns:276px minmax(0,1fr);gap:30px;padding:24px 0 40px;align-items:start}
+.side{position:sticky;top:64px;max-height:calc(100vh - 80px);overflow:auto;padding-right:6px}
+.side h2{font-size:13px;font-weight:700;margin:0 0 6px;color:var(--muted)}
+.search{width:100%;font:inherit;padding:8px 10px;border:1.5px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink);margin-bottom:12px}
+.shown{font-size:13px;color:var(--muted);margin:0 0 10px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.linkbtn{border:0;background:none;padding:0;color:#3B8BEB;font-weight:600;cursor:pointer;text-decoration:underline;font-size:13px}
+details.fa{border-top:1px solid var(--line);padding:2px 0}
+details.fa:last-child{border-bottom:1px solid var(--line)}
+details.fa>summary{list-style:none;display:flex;align-items:center;gap:6px;cursor:pointer;padding:6px 0}
+details.fa>summary::-webkit-details-marker{display:none}
+details.fa>summary::before{content:"";width:7px;height:7px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(-45deg);margin:0 6px 0 2px;transition:transform .15s}
+details.fa[open]>summary::before{transform:rotate(45deg)}
+.abtn{flex:1;display:flex;align-items:center;gap:8px;border:1.5px solid transparent;background:none;text-align:left;font-weight:650;padding:3px 8px;border-radius:7px;cursor:pointer}
+.abtn i{width:10px;height:10px;border-radius:50%;background:var(--c);flex:none}
+.abtn .n,.cbtn .n{margin-left:auto;font-weight:500;color:var(--muted);font-variant-numeric:tabular-nums}
+.abtn[aria-pressed="true"]{border-color:var(--c);background:color-mix(in srgb,var(--c) 14%,transparent)}
+ul.fc{list-style:none;margin:0 0 6px 22px;padding:0}
+.cbtn{width:100%;display:flex;gap:8px;border:1.5px solid transparent;background:none;text-align:left;padding:3px 8px;border-radius:7px;cursor:pointer;font-size:14px}
+.cbtn:hover,.abtn:hover{background:var(--soft)}
+.cbtn[aria-pressed="true"]{border-color:var(--c);background:color-mix(in srgb,var(--c) 14%,transparent);font-weight:650}
+.cbtn.inc{color:var(--muted)}
+
+h2.t{font-family:var(--serif);font-size:22px;margin:0 0 4px}
+.lede{margin:0 0 14px;color:var(--muted);max-width:52em}
+.runway{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 16px 10px;margin-bottom:10px}
+.scroll{overflow-x:auto}
+#chart{min-width:620px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 20px;font-size:13px;color:var(--muted);margin:10px 2px 4px}
+.legend span{display:inline-flex;align-items:center;gap:7px}
+.ev{cursor:pointer}
+.ev:focus-visible{outline:none}
+.ev:focus-visible .hit,.ev:hover .hit{stroke:var(--ink);stroke-width:1.5}
+.chartText{fill:var(--ink)}
+.note-out{font-size:13px;color:var(--muted);margin:4px 2px 6px}
+
+.group{margin-top:28px}
+.group h3{font-family:var(--serif);font-size:18px;margin:0 0 2px}
+.group h4{font-size:15px;margin:16px 0 0;display:flex;gap:8px;align-items:baseline}
+.group h4 span{font-weight:500;color:var(--muted);font-size:13px}
+.group .gnote{margin:0 0 8px;font-size:13px;color:var(--muted)}
+.rows{border-top:2px solid var(--ink)}
+.group h4+.rows{border-top-width:1px}
+.row{display:grid;grid-template-columns:128px minmax(0,1fr) 160px 170px;gap:6px 18px;padding:13px 8px;border-bottom:1px solid var(--line);align-items:start;transition:background-color .6s}
+.row.flash{background:#FFF3C4}
+.when .d{font-weight:700;font-size:16px;font-variant-numeric:tabular-nums}
+.when .rel{font-size:12.5px;color:var(--muted)}
+.when .rel.warn{color:#C2410C;font-weight:600}
+.what .drug{font-weight:650;font-size:16px}
+.what .meta{font-size:13px;color:var(--muted);margin-top:3px}
+.what .note{font-size:13px;color:var(--muted);margin-top:4px;max-width:46em}
+.what .conf{font-size:13px;color:#C2410C;font-weight:600;margin-top:4px}
+.who{font-size:14px;color:var(--c)}
+.who b{display:block;font-weight:650}
+.who span{color:var(--muted);font-size:13px}
+.badge{display:inline-block;font-size:12.5px;font-weight:600;padding:2px 9px;border-radius:5px;border:1.5px solid}
+.b-day{color:#0F5E3A;border-color:#0F5E3A;background:#E6F4EC}
+.b-month{color:#6B4B00;border-color:#B8860B;background:#FBF1D6}
+.b-quarter{color:#4A3A66;border-color:#7A6A9B;background:#EFEAF7;border-style:dashed}
+.b-crl{color:#8A1C1C;border-color:#8A1C1C;background:#FBE6E6}
+.prec{font-size:12.5px;color:var(--muted);margin-top:4px}
+.srcs{font-size:13px;margin-top:5px}
+.srcs a{display:block}
+.chg{display:grid;grid-template-columns:110px minmax(0,1fr);gap:4px 16px;padding:11px 8px;border-bottom:1px solid var(--line)}
+.chg .d{font-weight:700;font-variant-numeric:tabular-nums}
+.empty{padding:36px 18px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:10px;background:var(--panel);margin-top:20px}
+
+footer{border-top:1px solid var(--line);padding:22px 0 40px;font-size:13px;color:var(--muted)}
+footer p{margin:0 0 8px;max-width:64em}
+
+@media (max-width:900px){
+  .layout{grid-template-columns:1fr;gap:12px}
+  .side{display:none;position:static;max-height:none}
+  body.fopen .side{display:block}
+  #fbtn{display:inline-block}
+}
+@media (max-width:820px){.row{grid-template-columns:1fr;gap:4px}.chg{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+
+<header class="mast">
+  <div class="wrap">
+    <p class="site">PDUFA tracker · every date links its source</p>
+    <h1 id="hero">Loading…</h1>
+    <p class="sub" id="heroSub"></p>
+    <div class="stats" id="stats"></div>
+  </div>
+</header>
+
+<div class="controls">
+  <div class="wrap">
+    <div class="seg" role="tablist" aria-label="View">
+      <button role="tab" aria-selected="true" data-tab="up">Upcoming</button>
+      <button role="tab" aria-selected="false" data-tab="dec">Decided</button>
+      <button role="tab" aria-selected="false" data-tab="chg">What changed</button>
+    </div>
+    <div class="seg" id="viewSeg" aria-label="Group upcoming by">
+      <button aria-pressed="true" data-view="date">By date</button>
+      <button aria-pressed="false" data-view="cond">By condition</button>
+    </div>
+    <button class="btn" id="fbtn" aria-expanded="false">Filters</button>
+    <span class="spacer"></span>
+    <label class="field" id="primWrap"><input type="checkbox" id="primOnly"> Company, SEC or FDA sources only</label>
+    <a class="btn" id="icsLink" href="pdufa.ics" download title="Calendar feed of confirmed dates backed by a primary source">Calendar (.ics)</a>
+  </div>
+</div>
+
+<div class="wrap layout">
+  <aside class="side" aria-label="Filters">
+    <input class="search" type="search" id="q" placeholder="Search drug, company, condition" aria-label="Search drug, company or condition">
+    <p class="shown"><span id="shown"></span><button class="linkbtn" id="clear" hidden>Clear filters</button></p>
+    <h2>Therapeutic area and condition</h2>
+    <div id="facets"></div>
+  </aside>
+
+  <main>
+    <section id="viewUp">
+      <h2 class="t" id="runTitle">Decision runway</h2>
+      <p class="lede">Dots are exact dates. Bars are windows where the company has only named a month or quarter, so the real date could fall anywhere inside them. Pick one area on the left and the lanes split by condition.</p>
+      <div class="runway">
+        <div class="scroll"><div id="chart" aria-label="Timeline of upcoming FDA decisions"></div></div>
+        <div class="legend" aria-hidden="true">
+          <span><svg width="14" height="14"><circle cx="7" cy="7" r="5.5" fill="currentColor"/></svg>Exact day</span>
+          <span><svg width="26" height="14"><rect x="1" y="3" width="24" height="8" rx="3" fill="currentColor" fill-opacity=".2" stroke="currentColor"/></svg>Month named</span>
+          <span><svg width="26" height="14"><defs><pattern id="lg" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="6" stroke="currentColor" stroke-width="2" stroke-opacity=".5"/></pattern></defs><rect x="1" y="3" width="24" height="8" rx="3" fill="url(#lg)" stroke="currentColor" stroke-dasharray="3 2"/></svg>Quarter named</span>
+          <span><svg width="14" height="14"><line x1="7" y1="0" x2="7" y2="14" stroke="#C2410C" stroke-width="2"/></svg>Today</span>
+        </div>
+        <p class="note-out" id="outside"></p>
+      </div>
+      <div id="listUp"></div>
+    </section>
+
+    <section id="viewDec" hidden>
+      <h2 class="t">Decided</h2>
+      <p class="lede" id="decLede">Outcomes found for goal dates that have passed. A status only changes when a company, SEC or FDA page reports it.</p>
+      <div id="listDec"></div>
+    </section>
+
+    <section id="viewChg" hidden>
+      <h2 class="t">What changed</h2>
+      <p class="lede">New dates, moved dates and outcomes, newest first. Each entry links the source that triggered it.</p>
+      <div id="listChg"></div>
+    </section>
+  </main>
+</div>
+
+<footer>
+  <div class="wrap">
+    <p><b>Where dates come from.</b> The FDA does not publish upcoming PDUFA dates, so every date here comes from the company that received it: SEC filings (8-Ks and exhibits), company press releases, and FDA pages. Catalyst calendars and trading sites are not used.</p>
+    <p><b>How much to trust a row.</b> <em>Verified</em>: two separate company, SEC or FDA channels give the same date, or a person reviewed it. <em>Single primary source</em>: one such source. <em>Unverified</em>: only news or other secondary coverage. Verified here means the channels agree, not that the company's own statement is correct.</p>
+    <p id="scopeNote"></p>
+    <p><b>Limits.</b> US FDA only. Companies often name only a quarter, and private companies may disclose nothing, so this list is incomplete. Dates can move; check the linked source before acting. Not investment, legal or medical advice.</p>
+    <p id="updated"></p>
+  </div>
+</footer>
+
+<script src="data/events.js"></script>
+<script>
+const DATA = window.PDUFA_DATA || {meta:{generated_at:null}, events:[]};
+
+const AREAS = {
+  onc:{label:"Oncology",color:"#9B3C8A"}, imm:{label:"Immunology",color:"#12968F"},
+  obe:{label:"Metabolic",color:"#D07A12"}, endo:{label:"Endocrine",color:"#A87510"},
+  cardio:{label:"Cardiovascular",color:"#D64541"}, neuro:{label:"Neurology",color:"#5C6BD0"},
+  psych:{label:"Psychiatry",color:"#9A7260"}, inf:{label:"Infectious disease",color:"#3E9A45"},
+  heme:{label:"Hematology (non-cancer)",color:"#CC3A72"}, rare:{label:"Rare & genetic",color:"#6B8794"},
+  nephro:{label:"Nephrology",color:"#2290DA"}, oph:{label:"Ophthalmology",color:"#8C8C14"},
+  diag:{label:"Diagnostics & imaging",color:"#6B7F88"}, other:{label:"Other",color:"#8A8A8A"}
+};
+const SRC_LABEL = {sec:"SEC filing", fda:"FDA page", ema:"EMA page", press_release:"Company release", secondary:"News or other (secondary)"};
+const TRUST = {verified:{t:"Verified",c:"b-day"}, primary:{t:"Single primary source",c:"b-month"}, unverified:{t:"Unverified",c:"b-quarter"}};
+const SYN = {
+  "Alzheimer's Disease":"alzheimer dementia amyloid", "Arthritis":"rheumatoid ra psoriatic psa juvenile jia spondyloarthritis ankylosing gout osteoarthritis",
+  "Breast Cancer":"breast tnbc her2 hr+", "Colorectal Cancer":"colon rectal crc colorectal bowel",
+  "Melanoma":"skin", "Non-Small Cell Lung Cancer":"nsclc lung egfr alk ros1 kras",
+  "Obesity":"weight overweight glp-1 glp1 amylin", "Pancreatic Cancer":"pancreas pdac", "Prostate Cancer":"mcrpc mhspc crpc"
+};
+
+const $ = s => document.querySelector(s);
+const MON = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const MONFULL = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+const DAY = 864e5;
+const esc = s => String(s==null?"":s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const safeUrl = u => /^https?:\/\//.test(u) ? u : "#";
+const parse = s => { const [y,m,d] = s.split("-").map(Number); return new Date(y, m-1, d); };
+const today = (() => { const n = new Date(); return new Date(n.getFullYear(), n.getMonth(), n.getDate()); })();
+const daysBetween = (a,b) => Math.round((b-a)/DAY);
+const fmtDay = d => `${MON[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+const lowerFirst = t => /^[A-Z][a-z]/.test(t) ? t[0].toLowerCase()+t.slice(1) : t;
+const plural = (n,w) => `${n} ${w}${n===1?"":"s"}`;
+
+function whenInfo(w){
+  let m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(w);
+  if (m){ const d = new Date(+m[1],+m[2]-1,+m[3]); return {precision:"day", start:d, end:d, sort:d, group:`${MONFULL[d.getMonth()]} ${d.getFullYear()}`}; }
+  m = /^(\d{4})-(\d{2})$/.exec(w);
+  if (m){ const y=+m[1], mo=+m[2]; return {precision:"month", start:new Date(y,mo-1,1), end:new Date(y,mo,0), sort:new Date(y,mo,0), group:`${MONFULL[mo-1]} ${y}`}; }
+  m = /^(\d{4})-Q([1-4])$/.exec(w);
+  if (m){ const y=+m[1], q=+m[2]; const end=new Date(y,q*3,0); return {precision:"quarter", start:new Date(y,(q-1)*3,1), end, sort:new Date(end.getTime()+DAY), group:`Q${q} ${y}, day not named`}; }
+  return null;
+}
+function normalise(e){
+  const w = whenInfo(e.date); if (!w) return null;
+  Object.assign(e, w);
+  e.cond = e.condition || "Unclassified";
+  e.conds = [e.cond];
+  e.short = e.drug.replace(/\s*\(.*?\)/g,"").slice(0,30);
+  e.area = AREAS[e.area] ? e.area : "other";
+  e.sources = e.sources || []; e.history = e.history || []; e.conflicts = e.conflicts || [];
+  return e;
+}
+const ALL = DATA.events.map(normalise).filter(Boolean);
+const isPending = e => !e.status || e.status==="pending";
+const UPCOMING = ALL.filter(isPending);
+const DECIDED = ALL.filter(e => !isPending(e));
+
+const state = {tab:"up", view:"date", sel:new Set(), primOnly:false, q:"", open:new Set(["onc"])};
+
+/* ---------- filtering ---------- */
+function passBase(e){
+  if (state.primOnly && e.review==="unverified") return false;
+  if (state.q){
+    const hay = `${e.drug} ${e.short} ${e.company} ${e.indication||""} ${e.cond} ${SYN[e.cond]||""} ${AREAS[e.area].label}`.toLowerCase();
+    if (!hay.includes(state.q.toLowerCase())) return false;
+  }
+  return true;
+}
+function passSel(e){
+  if (!state.sel.size) return true;
+  return state.sel.has("a:"+e.area) || state.sel.has(`c:${e.area}|${e.cond}`);
+}
+const matches = e => passBase(e) && passSel(e);
+const dataset = () => state.tab==="dec" ? DECIDED : UPCOMING;
+
+/* ---------- text helpers ---------- */
+function whenText(e, upcoming=true){
+  if (e.precision==="day") return fmtDay(e.start);
+  const t = e.precision==="month" ? `${MONFULL[e.start.getMonth()]} ${e.start.getFullYear()}` : `Q${Math.floor(e.start.getMonth()/3)+1} ${e.start.getFullYear()}`;
+  return (upcoming?"~":"")+t;
+}
+const precText = e => e.precision==="day" ? "Exact day" : e.precision==="month" ? "Month named, day not" : "Quarter named, day not";
+function relText(e){
+  if (e.precision==="day"){
+    const n = daysBetween(today, e.start);
+    if (n===0) return {t:"Decision due today", warn:true};
+    if (n>0) return {t:`in ${plural(n,"day")}`};
+    return {t:`${plural(-n,"day")} past the goal date; outcome not yet found`, warn:true};
+  }
+  if (today > e.end) return {t:"Window has closed; outcome not yet found", warn:true};
+  if (today >= e.start) return {t:"Window is open now"};
+  return {t:`window opens in ${plural(daysBetween(today,e.start),"day")}`};
+}
+const trustBadge = e => { const t = TRUST[e.review] || TRUST.unverified; return `<span class="badge ${t.c}">${t.t}${e.reviewed?" by reviewer":""}</span>`; };
+function srcLinks(list){
+  return `<div class="srcs">${list.map(s => `<a href="${esc(safeUrl(s.url))}" target="_blank" rel="noopener" title="${esc(s.name||"")}${s.published?", "+esc(s.published):""}">${esc(SRC_LABEL[s.type]||"Source")}${s.checked&&s.checked!=="ok"?" (page not confirmed)":""}</a>`).join("")}</div>`;
+}
+function whoHtml(e){
+  const a = AREAS[e.area];
+  return `<div class="who" style="--c:${a.color}"><b>${esc(a.label)}</b><span>${esc(e.cond)}</span></div>`;
+}
+function evidence(e){
+  const s = e.sources.find(x => x.evidence);
+  return s ? `<div class="note">Source says: ${esc(s.evidence)}</div>` : "";
+}
+function conflictHtml(e){
+  return e.conflicts.length ? `<div class="conf">Sources disagree. Another source gives ${e.conflicts.map(c=>esc(c.date)).join(", ")}.</div>` : "";
+}
+
+/* ---------- hero ---------- */
+function renderHero(){
+  const confirmed = UPCOMING.filter(e => e.precision==="day" && e.start >= today).sort((a,b)=>a.start-b.start);
+  const next = confirmed.find(e => e.review!=="unverified") || confirmed[0];
+  const h = $("#hero"), s = $("#heroSub");
+  if (!ALL.length){
+    h.textContent = "No data yet.";
+    s.textContent = "Run the pipeline (python -m pipeline all) to fill this site. See the README.";
+  } else if (next){
+    const n = daysBetween(today,next.start);
+    h.textContent = `Next exact FDA decision date: ${next.short.replace(/ \+.*$/,"")} in ${next.cond}, ${n===0?"today":"in "+plural(n,"day")}.`;
+    s.textContent = `${next.company} · goal date ${fmtDay(next.start)}. The FDA can act before, on or after a goal date.${next.review==="unverified"?" This date comes from news coverage only.":""}`;
+  } else {
+    h.textContent = "No exact decision dates ahead in the current data.";
+    s.textContent = "Windows where only a month or quarter is known are still listed below.";
+  }
+  const up = UPCOMING.filter(e => e.end >= today);
+  const exact = up.filter(e => e.precision==="day").length;
+  const prim = up.filter(e => e.review!=="unverified").length;
+  const g = DATA.meta.generated_at;
+  $("#stats").innerHTML = `<span><b>${exact}</b> exact dates ahead</span><span><b>${up.length-exact}</b> month or quarter windows</span><span><b>${prim}</b> with a primary source</span><span><b>${DECIDED.length}</b> decided</span>`;
+  const sc = DATA.meta.scope || [];
+  $("#scopeNote").innerHTML = sc.length ? `<b>Scope.</b> ${sc.length} indications: ${sc.map(x=>esc(x.label)).join(", ")}. Decisions for other diseases are not tracked.` : "";
+  $("#updated").textContent = g ? `Data last refreshed ${g.replace("T"," ").replace("Z"," UTC")}.` : "";
+}
+
+/* ---------- facets ---------- */
+function renderFacets(){
+  const base = dataset().filter(passBase);
+  const by = {};
+  base.forEach(e => { const a = by[e.area] || (by[e.area] = {n:0,c:{}}); a.n++; a.c[e.cond] = (a.c[e.cond]||0)+1; });
+  if (!state.q) (DATA.meta.scope||[]).forEach(sc => { const a = by[sc.area] || (by[sc.area] = {n:0,c:{}}); if (!(sc.label in a.c)) a.c[sc.label] = 0; });   // show every tracked indication, even with no events
+  $("#shown").textContent = `Showing ${dataset().filter(matches).length} of ${dataset().length}`;
+  $("#clear").hidden = !(state.sel.size || state.q || state.primOnly);
+  $("#fbtn").textContent = state.sel.size ? `Filters (${state.sel.size})` : "Filters";
+  $("#facets").innerHTML = Object.keys(AREAS).filter(k => by[k]).map(k => {
+    const a = AREAS[k], d = by[k], areaOn = state.sel.has("a:"+k);
+    const conds = Object.entries(d.c).sort((x,y)=>y[1]-x[1] || x[0].localeCompare(y[0]));
+    const open = state.open.has(k) || [...state.sel].some(t => t.startsWith("c:"+k+"|"));
+    return `<details class="fa" data-area="${k}" ${open?"open":""} style="--c:${a.color}">
+      <summary><button class="abtn" data-a="${k}" aria-pressed="${areaOn}"><i></i>${esc(a.label)}<span class="n">${d.n}</span></button></summary>
+      <ul class="fc">${conds.map(([c,n]) => `<li><button class="cbtn ${areaOn?"inc":""}" data-a2="${k}" data-c="${esc(c)}" aria-pressed="${state.sel.has(`c:${k}|${c}`)}"><span>${esc(c)}</span><span class="n">${n}</span></button></li>`).join("")}</ul></details>`;
+  }).join("") || `<div class="empty" style="margin-top:0">Nothing matches.</div>`;
+}
+
+/* ---------- rows ---------- */
+function rowUp(e){
+  const r = relText(e);
+  return `<article class="row" id="row-${esc(e.id)}">
+    <div class="when"><div class="d">${esc(whenText(e))}</div><div class="rel ${r.warn?"warn":""}">${esc(r.t)}</div></div>
+    <div class="what"><div class="drug">${esc(e.drug)}</div><div>${esc(e.indication||"")}</div><div class="meta">${esc(e.company)}</div>${evidence(e)}${conflictHtml(e)}</div>
+    ${whoHtml(e)}
+    <div>${trustBadge(e)}<div class="prec">${esc(precText(e))}</div>${srcLinks(e.sources)}</div>
+  </article>`;
+}
+function rowDec(e){
+  const ok = e.status==="approved";
+  const lab = ok ? "Approved" : e.status==="crl" ? "Complete response letter" : e.status;
+  return `<article class="row" id="row-${esc(e.id)}">
+    <div class="when"><div class="d">${esc(whenText(e,false))}</div><div class="rel">goal date${e.decided?`; decided ${esc(e.decided)}`:""}</div></div>
+    <div class="what"><div class="drug">${esc(e.drug)}</div><div>${esc(e.indication||"")}</div><div class="meta">${esc(e.company)}</div>${evidence(e)}</div>
+    ${whoHtml(e)}
+    <div><span class="badge ${ok?"b-day":"b-crl"}">${esc(lab)}</span><div class="prec">Outcome sources</div>${srcLinks(e.status_sources||[])}<div class="prec">Goal date sources</div>${srcLinks(e.sources)}</div>
+  </article>`;
+}
+
+function renderUpcoming(){
+  const items = UPCOMING.filter(matches).sort((a,b)=>a.sort-b.sort || a.start-b.start);
+  const host = $("#listUp");
+  if (!items.length){ host.innerHTML = `<div class="empty">${ALL.length?"No events match these filters.":"No data yet. Run the pipeline to fill this site."}</div>`; return; }
+  if (state.view==="cond"){
+    host.innerHTML = Object.keys(AREAS).filter(k => items.some(e=>e.area===k)).map(k => {
+      const inA = items.filter(e=>e.area===k), conds = {};
+      inA.forEach(e => (conds[e.cond] = conds[e.cond] || []).push(e));
+      return `<div class="group"><h3 style="color:${AREAS[k].color}">${esc(AREAS[k].label)} <span style="font-weight:400;font-size:14px;color:var(--muted)">${plural(inA.length,"event")}</span></h3>${
+        Object.entries(conds).sort((a,b)=>b[1].length-a[1].length || a[0].localeCompare(b[0])).map(([c,l]) => `<h4>${esc(c)}<span>${plural(l.length,"event")}</span></h4><div class="rows">${l.map(rowUp).join("")}</div>`).join("")}</div>`;
+    }).join("");
+    return;
+  }
+  const groups = [];
+  items.forEach(e => { let g = groups.find(x=>x.name===e.group); if(!g){ g={name:e.group,items:[],key:e.sort}; groups.push(g);} g.items.push(e); });
+  groups.sort((a,b)=>a.key-b.key);
+  host.innerHTML = groups.map(g => `<div class="group"><h3>${esc(g.name)}</h3>${/not named/.test(g.name)?`<p class="gnote">The company has only said the decision falls somewhere in this quarter.</p>`:""}<div class="rows">${g.items.map(rowUp).join("")}</div></div>`).join("");
+}
+function renderDecided(){
+  const items = DECIDED.filter(matches).sort((a,b)=>b.sort-a.sort);
+  const ap = items.filter(e=>e.status==="approved").length;
+  $("#decLede").textContent = `${items.length} decided: ${ap} approved, ${items.length-ap} other. A status only changes when a company, SEC or FDA page reports it.`;
+  $("#listDec").innerHTML = items.length ? `<div class="rows" style="margin-top:6px">${items.map(rowDec).join("")}</div>` : `<div class="empty">No decided events match these filters.</div>`;
+}
+function renderChanges(){
+  const rows = [];
+  ALL.forEach(e => e.history.forEach(h => rows.push({e,h})));
+  rows.sort((a,b)=>(b.h.ts||"").localeCompare(a.h.ts||""));
+  const txt = ({e,h}) => h.field==="created" ? `Added with goal date ${esc(h.new)}.`
+    : h.field==="date" ? `Goal date moved from ${esc(h.old)} to ${esc(h.new)}.`
+    : h.field==="status" ? `Outcome recorded: ${esc(h.new)}.` : esc(h.field);
+  $("#listChg").innerHTML = rows.length ? `<div class="rows" style="margin-top:6px">${rows.slice(0,150).map(r => `<div class="chg"><div class="d">${esc((r.h.ts||"").slice(0,10))}</div><div><b>${esc(r.e.short)}</b> · ${esc(r.e.company)}<br>${txt(r)} ${r.h.source?`<a href="${esc(safeUrl(r.h.source))}" target="_blank" rel="noopener">Source</a>`:""}</div></div>`).join("")}</div>` : `<div class="empty">No changes recorded yet.</div>`;
+}
+
+/* ---------- runway chart ---------- */
+function renderChart(){
+  const host = $("#chart");
+  const W = Math.max(host.parentElement.clientWidth, 620);
+  const A0 = new Date(today.getFullYear(), today.getMonth(), 1), A1 = new Date(today.getFullYear(), today.getMonth()+6, 0);
+  $("#runTitle").textContent = `Decision runway, ${MON[A0.getMonth()]} ${A0.getFullYear()} to ${MON[A1.getMonth()]} ${A1.getFullYear()}`;
+  const span = daysBetween(A0,A1)+1, pad = 10, per = (W-pad*2)/span;
+  const x = d => pad + daysBetween(A0,d)*per;
+  const items = UPCOMING.filter(matches);
+  const inAxis = items.filter(e => e.end >= A0 && e.start <= A1);
+  const outside = items.filter(e => !(e.end >= A0 && e.start <= A1));
+  $("#outside").textContent = outside.length ? `${plural(outside.length,"later or earlier event")} fall outside this range and appear in the list only: ${outside.map(e=>e.short).join(", ")}.` : "";
+  if (!inAxis.length){ host.innerHTML = `<p class="note-out" style="padding:14px 0">Nothing falls in this range with the current filters.</p>`; return; }
+
+  const byCond = new Set(inAxis.map(e=>e.area)).size===1;
+  const keyOf = e => byCond ? e.cond : e.area;
+  const keys = [...new Set(inAxis.map(keyOf))];
+  keys.sort(byCond ? ((a,b)=>inAxis.filter(e=>keyOf(e)===b).length-inAxis.filter(e=>keyOf(e)===a).length || a.localeCompare(b))
+                   : ((a,b)=>Object.keys(AREAS).indexOf(a)-Object.keys(AREAS).indexOf(b)));
+  const RH = 24, top = 26, labelW = s => Math.ceil(s.length*6.4)+8;
+  let y = top, lanes = "", defs = "";
+  Object.entries(AREAS).forEach(([k,a]) => { defs += `<pattern id="h-${k}" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="${a.color}" fill-opacity=".1"/><line x1="0" y1="0" x2="0" y2="6" stroke="${a.color}" stroke-width="2" stroke-opacity=".5"/></pattern>`; });
+  keys.forEach(k => {
+    const li = inAxis.filter(e => keyOf(e)===k).sort((a,b)=>a.start-b.start || b.end-a.end);
+    const color = AREAS[byCond ? li[0].area : k].color, name = byCond ? k : AREAS[k].label;
+    const rowsEnd = [];
+    const placed = li.map(e => {
+      let x0, x1, cx, flip=false;
+      if (e.precision==="day"){ cx = x(e.start)+per/2; flip = cx+8+labelW(e.short) > W-4; x0 = flip ? cx-8-labelW(e.short) : cx-8; x1 = flip ? cx+8 : cx+8+labelW(e.short); }
+      else { x0 = Math.max(x(e.start),pad); x1 = Math.min(x(new Date(e.end.getTime()+DAY)), W-pad); }
+      let r = rowsEnd.findIndex(end => x0 >= end+6); if (r<0){ r = rowsEnd.length; rowsEnd.push(0); }
+      rowsEnd[r] = x1; return {e,x0,x1,cx,r,flip};
+    });
+    lanes += `<g><text x="${pad}" y="${y+14}" font-size="13" font-weight="700" fill="${color}">${esc(name)}</text>`;
+    placed.forEach(p => {
+      const e = p.e, cy = y + 26 + p.r*RH, a = AREAS[e.area];
+      const lab = `${e.drug}, ${e.indication||e.cond}. ${whenText(e)}. ${(TRUST[e.review]||TRUST.unverified).t}.`;
+      lanes += `<g class="ev" tabindex="0" role="button" data-id="${esc(e.id)}" aria-label="${esc(lab)}"><title>${esc(lab)}</title>`;
+      if (e.precision==="day"){
+        const hollow = e.review==="unverified";
+        lanes += `<circle class="hit" cx="${p.cx}" cy="${cy}" r="6.5" fill="${hollow?"var(--panel)":a.color}" stroke="${a.color}" stroke-width="${hollow?2:1.5}"/><text class="chartText" x="${p.flip?p.cx-11:p.cx+11}" y="${cy+4}" font-size="12.5"${p.flip?' text-anchor="end"':''}>${esc(e.short)}</text>`;
+      } else {
+        const w = Math.max(p.x1-p.x0,6), fill = e.precision==="month" ? `fill="${a.color}" fill-opacity=".2"` : `fill="url(#h-${e.area})"`;
+        lanes += `<rect class="hit" x="${p.x0}" y="${cy-9}" width="${w}" height="18" rx="5" ${fill} stroke="${a.color}" stroke-width="1.25"${e.precision==="quarter"?' stroke-dasharray="4 3"':''}/>`;
+        lanes += w > labelW(e.short)+8 ? `<text class="chartText" x="${p.x0+8}" y="${cy+4}" font-size="12.5">${esc(e.short)}</text>` : `<text class="chartText" x="${p.x1+6}" y="${cy+4}" font-size="12.5">${esc(e.short)}</text>`;
+      }
+      lanes += `</g>`;
+    });
+    lanes += `</g>`;
+    y += Math.max(rowsEnd.length,1)*RH + 36;
+  });
+  const H = y + 6;
+  let grid = "";
+  for (let d = new Date(A0); d <= A1; d = new Date(d.getFullYear(), d.getMonth()+1, 1)){
+    const gx = x(d);
+    grid += `<line x1="${gx}" y1="${top-6}" x2="${gx}" y2="${H}" stroke="var(--line)"/><text x="${gx+6}" y="16" font-size="12.5" font-weight="600" fill="var(--muted)">${MONFULL[d.getMonth()]} ${d.getFullYear()}</text>`;
+  }
+  const tx = x(today)+per/2;
+  const todayLine = `<line x1="${tx}" y1="${top-6}" x2="${tx}" y2="${H}" stroke="#C2410C" stroke-width="2"/><text x="${Math.min(tx+4,W-40)}" y="${H-2}" font-size="11.5" font-weight="600" fill="#C2410C">Today</text>`;
+  host.innerHTML = `<svg width="${W}" height="${H+6}" viewBox="0 0 ${W} ${H+6}" role="group"><defs>${defs}</defs>${grid}${lanes}${todayLine}</svg>`;
+}
+
+/* ---------- interactions ---------- */
+function jumpTo(id){
+  const el = document.getElementById("row-"+id); if (!el) return;
+  el.scrollIntoView({behavior: matchMedia("(prefers-reduced-motion:reduce)").matches?"auto":"smooth", block:"center"});
+  el.classList.add("flash"); setTimeout(()=>el.classList.remove("flash"), 1800);
+}
+$("#chart").addEventListener("click", ev => { const g = ev.target.closest(".ev"); if (g) jumpTo(g.dataset.id); });
+$("#chart").addEventListener("keydown", ev => { if ((ev.key==="Enter"||ev.key===" ") && ev.target.closest(".ev")){ ev.preventDefault(); jumpTo(ev.target.closest(".ev").dataset.id);} });
+$("#facets").addEventListener("click", ev => {
+  const ab = ev.target.closest(".abtn");
+  if (ab){
+    ev.preventDefault();
+    const k = ab.dataset.a, tok = "a:"+k;
+    if (state.sel.has(tok)) state.sel.delete(tok);
+    else { state.sel.add(tok); [...state.sel].forEach(t => { if (t.startsWith("c:"+k+"|")) state.sel.delete(t); }); state.open.add(k); }
+    render(); return;
+  }
+  const cb = ev.target.closest(".cbtn");
+  if (cb){
+    const k = cb.dataset.a2, tok = `c:${k}|${cb.dataset.c}`;
+    if (state.sel.has(tok)) state.sel.delete(tok); else { state.sel.add(tok); state.sel.delete("a:"+k); }
+    render();
+  }
+});
+$("#facets").addEventListener("toggle", ev => { const d = ev.target; if (d.matches && d.matches("details.fa")) d.open ? state.open.add(d.dataset.area) : state.open.delete(d.dataset.area); }, true);
+$("#primOnly").addEventListener("change", e => { state.primOnly = e.target.checked; render(); });
+$("#q").addEventListener("input", e => { state.q = e.target.value.trim(); render(); });
+$("#clear").addEventListener("click", () => { state.sel.clear(); state.q = ""; state.primOnly = false; $("#q").value = ""; $("#primOnly").checked = false; render(); });
+$("#fbtn").addEventListener("click", () => { const o = document.body.classList.toggle("fopen"); $("#fbtn").setAttribute("aria-expanded", o); });
+document.querySelectorAll("[data-tab]").forEach(t => t.addEventListener("click", () => {
+  state.tab = t.dataset.tab;
+  document.querySelectorAll("[data-tab]").forEach(x => x.setAttribute("aria-selected", x===t));
+  $("#viewUp").hidden = state.tab!=="up"; $("#viewDec").hidden = state.tab!=="dec"; $("#viewChg").hidden = state.tab!=="chg";
+  $("#viewSeg").style.display = state.tab==="up" ? "" : "none";
+  render();
+}));
+document.querySelectorAll("[data-view]").forEach(b => b.addEventListener("click", () => {
+  state.view = b.dataset.view;
+  document.querySelectorAll("[data-view]").forEach(x => x.setAttribute("aria-pressed", x===b));
+  render();
+}));
+
+function render(){
+  renderFacets();
+  if (state.tab==="up"){ renderChart(); renderUpcoming(); }
+  else if (state.tab==="dec") renderDecided();
+  else renderChanges();
+}
+let rt; window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(()=>{ if (state.tab==="up") renderChart(); }, 120); });
+renderHero(); render();
+</script>
+</body>
+</html>
