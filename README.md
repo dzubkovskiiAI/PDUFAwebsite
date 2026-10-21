@@ -98,7 +98,7 @@ Back up the `data` folder: it holds the history and your reviews.
 2. Settings > Pages > Source: GitHub Actions.
 3. Settings > Actions > General > Workflow permissions: Read and write.
 4. Settings > Secrets and variables > Actions: add secret `GEMINI_API_KEY` (or `ANTHROPIC_API_KEY` for
-   Claude) and variable `SEC_USER_AGENT`.
+   Claude) and secret `SEC_USER_AGENT` (a secret is hidden in the run logs, a variable is not).
 5. Actions tab > "Refresh data and deploy site" > Run workflow. It then runs on the schedule in
    `.github/workflows/refresh.yml`.
 
