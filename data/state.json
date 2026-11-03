@@ -1,6 +1,7 @@
 {
  "edgar_seen": [
   "https://www.sec.gov/Archives/edgar/data/1048477/000104847726000015/earningsrelease-6aug26ex991.htm",
+  "https://www.sec.gov/Archives/edgar/data/1048477/000104847726000021/earningsrelease-2nov26ex991.htm",
   "https://www.sec.gov/Archives/edgar/data/1055726/000105572626000024/ino-63026x8kex991.htm",
   "https://www.sec.gov/Archives/edgar/data/1119774/000117891326003756/exhibit_99-1.htm",
   "https://www.sec.gov/Archives/edgar/data/1133869/000110465926078327/capr-20260626x8k.htm",
@@ -28,6 +29,8 @@
   "https://www.sec.gov/Archives/edgar/data/1515673/000119312526332802/rare-ex99_1.htm",
   "https://www.sec.gov/Archives/edgar/data/1583648/000119312526435113/pvla-20261028.htm",
   "https://www.sec.gov/Archives/edgar/data/1583648/000119312526435113/pvla-ex99_1.htm",
+  "https://www.sec.gov/Archives/edgar/data/1590560/000110465926120915/tm2628699d1_8k.htm",
+  "https://www.sec.gov/Archives/edgar/data/1590560/000110465926120915/tm2628699d1_ex99-1.htm",
   "https://www.sec.gov/Archives/edgar/data/1590750/000119312526336691/d174744dex991.htm",
   "https://www.sec.gov/Archives/edgar/data/1622229/000119312526341315/cogt-ex99_1.htm",
   "https://www.sec.gov/Archives/edgar/data/1652130/000119312526385194/ntla-20260908.htm",
@@ -73,6 +76,7 @@
   "https://www.sec.gov/Archives/edgar/data/1946563/000121390026098056/ea030486201ex99-1.htm",
   "https://www.sec.gov/Archives/edgar/data/1946563/000121390026106979/ea030776101ex99-1.htm",
   "https://www.sec.gov/Archives/edgar/data/1953926/000110465926095437/tm2622871d1_ex99-1.htm",
-  "https://www.sec.gov/Archives/edgar/data/875320/000087532026000256/ex-991_q22026.htm"
+  "https://www.sec.gov/Archives/edgar/data/875320/000087532026000256/ex-991_q22026.htm",
+  "https://www.sec.gov/Archives/edgar/data/875320/000087532026000287/ex-991_q32026.htm"
  ]
 }
